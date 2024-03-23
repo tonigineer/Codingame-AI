@@ -25,13 +25,13 @@ def main():
     mnist = tf.keras.datasets.mnist
     (x_train, _), (x_test, y_test) = mnist.load_data()
     x_train, x_test = x_train / 255.0, x_test / 255.0
-    X_test = x_test.reshape(10000, 784).T
-    Y_test = y_test
+    x_test = x_test.reshape(10000, 784).T
 
     print(
-        f'Accuracy with test data: ' +
-        f'{sum(nn.predict(X_test) == Y_test) / Y_test.size:6.2%}'
+        'Accuracy with test data: ' +
+        f'{sum(nn.predict(x_test) == y_test) / y_test.size:6.2%}'
     )
+
 
 if __name__ == "__main__":
     main()

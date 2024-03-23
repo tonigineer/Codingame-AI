@@ -23,8 +23,7 @@ def export_weights_biases(model):
 
 def main(data: tuple, epochs: int = 10):
     """Train ANN and save model."""
-
-    x_train, y_train, x_test, y_text = data
+    x_train, y_train, x_test, y_test = data
 
     model = tf.keras.models.Sequential([
         tf.keras.layers.Flatten(input_shape=(28, 28)),
@@ -47,12 +46,12 @@ def main(data: tuple, epochs: int = 10):
 
     model.summary()
 
-
     # probability_model = tf.keras.Sequential([
     #   model,
     #   tf.keras.layers.Softmax()
     # ])
     # probability_model(x_test[:5])
+
 
 if __name__ == "__main__":
     mnist = tf.keras.datasets.mnist

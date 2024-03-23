@@ -139,10 +139,10 @@ if __name__ == "__main__":
 
     # Run predictions for both data sets
     print(
-        f'Accuracy with training data: ' +
+        'Accuracy with training data: ' +
         f'{sum(nn.predict(X_train) == Y_train) / Y_train.size:6.2%}'
     )
     print(
-        f'Accuracy with test data: ' +
+        'Accuracy with test data: ' +
         f'{sum(nn.predict(X_test) == Y_test) / Y_test.size:6.2%}'
     )
