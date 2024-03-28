@@ -10,7 +10,7 @@ git clone https://github.com/tonigineer/nn-codingame.git ~/journey && cd ~/journ
 
 # Optional, but recommended
 python -m venv .venv
-source .venv/Scripts/activate
+source .venv/bin/activate
 
 pip install -r requirements.txt
 ```
