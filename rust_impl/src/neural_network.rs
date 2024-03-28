@@ -4,22 +4,21 @@ use std::fs::File;
 use ndarray::{Array2, Axis};
 use csv::ReaderBuilder;
 use ndarray_csv::Array2Reader;
-use ndarray_stats::QuantileExt;
+use ndarray_stats::QuantileExt;  // argmax trait!
 
+#[derive(Debug)]
 enum ActivationFunction {
     RELU,
-    SIGMOID,
     SOFTMAX,
-    ARGMAX
 }
 
-fn sigmoid_activation(z: Array2<f32>) -> Array2<f32> {
-    z.mapv(|x| sigmoid(&x))
-}
+// fn sigmoid_activation(z: Array2<f32>) -> Array2<f32> {
+//     z.mapv(|x| sigmoid(&x))
+// }
 
-fn sigmoid(z: &f32) -> f32 {
-    1.0 / (1.0 + std::f32::consts::E.powf(-z))
-}
+// fn sigmoid(z: &f32) -> f32 {
+//     1.0 / (1.0 + std::f32::consts::E.powf(-z))
+// }
 
 fn relu_activation(z: Array2<f32>) -> Array2<f32> {
     z.mapv(|x| relu(&x))
@@ -44,6 +43,7 @@ fn argmax(x: Array2<f32>) -> Array2<f32> {
     Array2::<f32>::from_shape_vec((1, arr.len()), arr).unwrap()
 }
 
+#[derive(Debug)]
 enum Layer {
     INPUT(usize),
     HIDDEN(usize, ActivationFunction),
@@ -51,42 +51,54 @@ enum Layer {
 }
 
 pub struct NeuralNetwork{
-    layers: HashMap<usize, Layer>,
+    layers: Vec<Layer>,
     weights: HashMap<usize, Array2<f32>>,
     biases: HashMap<usize, Array2<f32>>
 }
 
 impl NeuralNetwork {
+    fn read_from_tf(fullfile: String, shape: (usize, usize)) -> Array2<f32> {
+        ReaderBuilder::new()
+            .has_headers(false)
+            .from_reader(File::open(fullfile).unwrap())
+            .deserialize_array2(shape).unwrap()
+    }
+
     pub fn init() -> NeuralNetwork {
-        // TODO: Dynamic reading!
-        let mut layers = HashMap::<usize, Layer>::new();
-        layers.insert(0, Layer::INPUT(784));
-        layers.insert(1, Layer::HIDDEN(128, ActivationFunction::RELU));
-        layers.insert(2, Layer::OUTPUT(10, ActivationFunction::ARGMAX));
+        let mut layers: Vec<Layer> = Vec::new();
+        layers.push(Layer::INPUT(784));
+        layers.push(Layer::HIDDEN(256, ActivationFunction::RELU));
+        layers.push(Layer::HIDDEN(128, ActivationFunction::RELU));
+        layers.push( Layer::OUTPUT(10, ActivationFunction::SOFTMAX));
 
-        let file = File::open("../feasibility/weights_1.txt").unwrap();
-        let mut reader = ReaderBuilder::new().has_headers(false).from_reader(file);
-        let weights_1: Array2<f32> = reader.deserialize_array2((784, 128)).unwrap();
-
-        let file = File::open("../feasibility/weights_2.txt").unwrap();
-        let mut reader = ReaderBuilder::new().has_headers(false).from_reader(file);
-        let weights_2: Array2<f32> = reader.deserialize_array2((128, 10)).unwrap();
-
-        let file = File::open("../feasibility/biases_1.txt").unwrap();
-        let mut reader = ReaderBuilder::new().has_headers(false).from_reader(file);
-        let biases_1: Array2<f32> = reader.deserialize_array2((128, 1)).unwrap();
-
-        let file = File::open("../feasibility/biases_2.txt").unwrap();
-        let mut reader = ReaderBuilder::new().has_headers(false).from_reader(file);
-        let biases_2: Array2<f32> = reader.deserialize_array2((10, 1)).unwrap();
-
+        let mut prev_dim: usize = 0;
         let mut weights: HashMap<usize, Array2<f32>> = HashMap::new();
-        weights.insert(1, weights_1);
-        weights.insert(2, weights_2);
-
         let mut biases: HashMap<usize, Array2<f32>> = HashMap::new();
-        biases.insert(1, biases_1);
-        biases.insert(2, biases_2);
+
+        for (idx, layer) in layers.iter().enumerate() {
+            match layer {
+                Layer::INPUT(dim) => { prev_dim = *dim },
+                Layer::HIDDEN(dim, _) |
+                Layer::OUTPUT(dim, _) => {
+                    weights.insert(
+                        idx,
+                        NeuralNetwork::read_from_tf(
+                            format!("../feasibility/weights_{}.txt", idx),
+                            (prev_dim, *dim)
+                        )
+                    );
+                    prev_dim = *dim;
+
+                    biases.insert(
+                        idx,
+                        NeuralNetwork::read_from_tf(
+                            format!("../feasibility/biases_{}.txt", idx),
+                            (*dim, 1)
+                        )
+                    );
+                }
+            }
+        }
 
         NeuralNetwork {
             layers,
@@ -99,48 +111,23 @@ impl NeuralNetwork {
         // Forward propagation
         let mut x: Array2<f32> = input;
 
-        let w = self.weights.get(&1).unwrap();
-        let b = self.biases.get(&1).unwrap(); 
-        let z = w.t().dot(&x) + b;
-        x = relu_activation(z);
-        
-        let w = self.weights.get(&2).unwrap();
-        let b = self.biases.get(&2).unwrap(); 
-        let z = w.t().dot(&x) + b;
-        x = softmax_activation(z);
+        for (idx, layer) in self.layers.iter().enumerate() {
+            match layer {
+                Layer::INPUT(_) => { },
+                Layer::HIDDEN(_, act_fcn) |
+                Layer::OUTPUT(_, act_fcn) => {
+                    let w = self.weights.get(&idx).unwrap();
+                    let b = self.biases.get(&idx).unwrap(); 
+                    let z = w.t().dot(&x) + b;
+
+                    match act_fcn {
+                        ActivationFunction::RELU => { x = relu_activation(z) },
+                        ActivationFunction::SOFTMAX => { x = softmax_activation(z) },
+                    }
+                }
+            }
+        }
 
         return argmax(x);
-
-        // for (idx, layer) in self.layers.iter() {
-        //     x = match layer {
-        //             Layer::INPUT(idx) => *input,
-        //             Layer::HIDDEN(idx, act_fnc) => {
-        //                 let w = self.weights.get(idx).unwrap();
-        //                 let b = self.biases.get(idx).unwrap();
-
-        //                 // Do the math
-        //                 let z = w.dot(&x) * b;
-        //                 // Apply activation function
-        //                 match act_fnc {
-        //                     ActivationFunction::RELU => relu_activation(z),
-        //                     ActivationFunction::SIGMOID => sigmoid_activation(z),
-        //                     ActivationFunction::SOFTMAX => relu_activation(z),
-        //                 }
-        //             },
-        //             Layer::OUTPUT(idx, act_fnc) => {
-        //                 let w = self.weights.get(idx).unwrap();
-        //                 let b = self.biases.get(idx).unwrap();
-
-        //                 // Do the math
-        //                 let z = w.dot(&x) * b;
-        //                 // Apply activation function
-        //                 match act_fnc {
-        //                     ActivationFunction::RELU => relu_activation(z),
-        //                     ActivationFunction::SIGMOID => sigmoid_activation(z),
-        //                     ActivationFunction::SOFTMAX => relu_activation(z),
-        //                 }
-        //             },
-        //     };
-        // }
     }
 }
