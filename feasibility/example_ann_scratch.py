@@ -132,7 +132,7 @@ if __name__ == "__main__":
     (X_test, Y_test) = mnist.get_normalize_data_set(10000, 'test')
 
     # Use gradient decent to train neural network
-    nn = NN(layer_sizes=(X_train.shape[0], 256, 10))
+    nn = NN(layer_sizes=(X_train.shape[0], 128, 10))
     nn.gradient_descent(
         X_train, Y_train, alpha=0.25, epochs=250, XT=X_test, YT=Y_test
     )

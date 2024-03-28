@@ -1,5 +1,11 @@
+# Folder
 .venv
 .vscode
 __pycache__
+target
 
+# Extensions
 *.npy
+
+# Specifics
+feasibility/*.txt

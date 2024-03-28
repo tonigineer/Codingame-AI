@@ -17,8 +17,10 @@ def export_weights_biases(model):
         np.save(f"feasibility/weights_{i}", model.layers[i].get_weights()[0])
         np.save(f"feasibility/biases_{i}", model.layers[i].get_weights()[1])
 
-        # data = np.squeeze(model.layers[i].get_weights()[0])
-        # np.savetxt('feasibility/test.txt', data)
+        data = np.squeeze(model.layers[i].get_weights()[0])
+        np.savetxt(f'feasibility/weights_{i}.txt', data, delimiter=",")
+        data = np.squeeze(model.layers[i].get_weights()[1])
+        np.savetxt(f'feasibility/biases_{i}.txt', data, delimiter=",")
 
 
 def main(data: tuple, epochs: int = 10):
