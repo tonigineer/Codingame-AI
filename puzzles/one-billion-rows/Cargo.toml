@@ -1,0 +1,12 @@
+[package]
+name = "one-billion-rows"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "create-input"
+path = "scripts/create_input.rs"
+
+[[bin]]
+name = "solve"
+path = "src/main.rs"

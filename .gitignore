@@ -1,11 +1,9 @@
 # Folder
-.venv
-.vscode
-__pycache__
+legacy
 target
 
-# Extensions
-*.npy
-
-# Specifics
-feasibility/*.txt
+# Files
+Cargo.lock
+flamegraph.svg
+input.in
+perf.data*
