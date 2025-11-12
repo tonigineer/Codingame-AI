@@ -10,3 +10,6 @@ path = "scripts/create_input.rs"
 [[bin]]
 name = "solve"
 path = "src/main.rs"
+
+[dependencies]
+hashbrown = "0.16.0"

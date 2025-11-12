@@ -1,10 +1,9 @@
+use std::env;
 use std::fs::File;
-use std::io::{BufWriter, Write};
+use std::io::{self, BufWriter, Write};
 
 type City = &'static str;
 type Temperature = f32;
-
-const NUM_ENTRIES: usize = 1_000;
 
 const CITIES: [City; 16] = [
     "Braunschweig",
@@ -32,19 +31,23 @@ const TEMPERATURES: [Temperature; 37] = [
 ];
 
 fn main() {
+    let num_entries: usize = env::args()
+        .nth(1)
+        .and_then(|s| s.replace('_', "").parse().ok())
+        .unwrap_or(1_000);
+
     let file = File::create("input.in").unwrap();
     let mut write_file = BufWriter::new(file);
 
-    println!(
-        "Creating input with {} lines. May take some time ...",
-        NUM_ENTRIES
-    );
+    println!("Creating input with {} lines.", num_entries);
 
     // Writing line by line really simple and slow.
-    for i in 0..NUM_ENTRIES {
-        // if (i + 1) % 100_000 == 0 {
-        //     println!("{:.1}", i as f32 / NUM_ENTRIES as f32);
-        // }
+    for i in 0..num_entries {
+        if (i + 1) % 1_000 == 0 {
+            let percentage = (i + 1) as f32 / num_entries as f32 * 100.0;
+            print!("\r\x1b[2KProgress: {:>6.2}%", percentage);
+            io::stdout().flush().unwrap();
+        }
 
         writeln!(
             write_file,
@@ -55,5 +58,5 @@ fn main() {
         .unwrap()
     }
 
-    println!("Input created");
+    println!();
 }

@@ -12,6 +12,8 @@ clippy:
 
 ci: build test clippy
 
+brc-input:
+    cargo run --release -p one-billion-rows --bin create-input 1_000_000_000
+
 brc:
-    cargo run --release -p one-billion-rows --bin create-input
     cargo run --release -p one-billion-rows --bin solve
